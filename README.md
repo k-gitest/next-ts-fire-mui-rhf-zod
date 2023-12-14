@@ -1,38 +1,62 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+## 目的
+next.jsを使用してCMSプラットフォームサービスを構築する技術選定における検証である。
 
-## Getting Started
+MUIは制御コンポーネント、RHF(React Hook Form)は非制御コンポーネントである為、制御／非制御の実装による再レンダリングを検証する。
 
-First, run the development server:
+## app概要
+create-next-appで構築されたNext.jsとfirabaseのfirestoreとauthenticationを利用したCMSプロジェクトです。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+* フォームバリデーションはzodを使用する
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+[ベースappはコチラ](https://github.com/k-gitest/next-ts-fire-auth-store-tailwind-withMUI)
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## 開発環境
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+* next 13.4.2
+* typescript 5.0.4
+* firebase 9.22.0
+* firebase-admin 11.9.0
+* tailwind 3.3.2
+* mui/material 5.13.5
+* swr 2.1.5
+* zod 3.21.4
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+## ディレクトリ構成
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+<pre>
+myapp...プロジェクトディレクトリ
+  ├── components ...呼び出し用コンポーネントファイル
+  │     ├── Private ...ログインユーザー向けコンポーネント
+  │     ├── Public ...非ログインユーザー向けコンポーネント
+  │     ├── layout ...メインレイアウト
+  │     └── provider ...ユーザー認証チェック
+  ├── lib ...firebaseなど外部設定ファイル
+  ├── pages ...初期生成されるメインファイル
+  │     ├── [uid] ...一般向け画面
+  │     │     └── [pid] ... 投稿表示画面
+  │     ├── api ...サーバー側処理
+  │     │     └── admin ... adminSDK使用ファイル
+  │     ├── login ...ログイン画面
+  │     ├── signup ...登録画面
+  │     └── user ...会員向け画面
+  ├── public ...画像ファイル
+  ├── styles ...css設定ファイル
+  └── types ...型定義ファイル
+</pre>
 
-## Learn More
+* components/AuthFormではMUIのTextFieldコンポーネントを使用してRHFのregisterと併用してフォームを実装している
+* components/Private/PostFormとUserFormではMUIのフォームコンポーネント各種を使用しRHFのControllerを併用してフォームを実装している
 
-To learn more about Next.js, take a look at the following resources:
+## 注意点
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+RHFはregisterを使用すると非制御であるが、MUIなどの外部UIコンポーネントを使用する場合はControlerを使用し制御コンポーネントとして扱う。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+しかしMUIのTextFieldコンポーネントはregisterが使用でき非制御コンポーネントとして扱う事ができる。
 
-## Deploy on Vercel
+## 結論
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+RHFのregisterを使用すれば再レンダリングが抑えられ表示パフォーマンスが抑えられる。MUIであってもTextFieldコンポーネントのみのフォームであれば非制御として扱う事ができパフォーマンスも期待できるので有用である。
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+その一方でTextFieldコンポーネント以外だとControllerを使用しないと連携できず再レンダリングもしてしまう。
+
+結論としては無理に制御／非制御を混在させるよりも、使用するフォームパーツによって統一した方が使いやすい。
